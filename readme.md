@@ -5,3 +5,7 @@ Requires
 - Numpy
 - Pandas
 - [Plot.ly](https://plot.ly/python/sankey-diagram/)
+
+Output of the sample dataset
+
+![Sankey Diagram Example](https://raw.githubusercontent.com/TheEliasBe/MoneyCoachToSankey/master/Example.png)
