@@ -1,11 +1,25 @@
 import plotly.graph_objects as go
 import numpy as np
-from numpy import genfromtxt
 import pandas as pd
+import sys
 
-data = pd.read_csv("MoneyCoach.csv", delimiter=';', header=0)
-data['Amount'] = data['Amount'].apply(lambda x : x.replace('.','').replace(',','.'))
+try:
+    source_file = sys.argv[1]
+    data = pd.read_csv(source_file, delimiter=',', header=0)
+except:
+    raise FileNotFoundError()
+
+# change dtype to float
 data['Amount'] = data['Amount'].astype('float')
+
+# extract currency
+if data["Currency"][0] == "EUR":
+    currency = "€"
+elif data["Currency"][0] == "USD":
+    currency = "$"
+else:
+    currency = "₿"
+
 incomes = data[data['Type'] == 'Income']
 expenses = data[data['Type'] == 'Expense']
 
@@ -26,9 +40,14 @@ for et in expense_types:
 # compute amount saved during period
 savings = round(sum(income_type_sum) - sum(expense_type_sum), 2)
 
-all_labels = np.concatenate((income_types, ["Budget"], expense_types, ["Savings"]), axis=0).tolist()
-source_index = np.concatenate((np.linspace(0,5,6,dtype=int), [6]*(len(expense_types)+2)), axis=0).tolist()
-target_index = [6]*len(income_types) + [6] + (np.linspace(len(income_types)+1, len(income_types)+len(expense_types)+1, len(expense_types)+1, dtype=int).tolist())
+# number of expense/income categories
+income_num = len(income_types)
+expense_num = len(expense_types)
+budget_index = len(income_types)
+
+all_labels = np.concatenate((income_types, ["Budget"], expense_types, ["Savings"]), axis=0).tolist() # create a list of all labels
+source_index = np.concatenate((np.linspace(0,income_num,income_num+1,dtype=int), [budget_index]*(expense_num+2)), axis=0).tolist()
+target_index = [budget_index]*(income_num+1) + (np.linspace(income_num+1, income_num+expense_num+1, expense_num+1, dtype=int).tolist())
 value = income_type_sum + [0] + expense_type_sum + [savings]
 
 print(len(all_labels), len(source_index), len(target_index))
@@ -38,6 +57,7 @@ for i in range(len(all_labels)):
     print(value[i])
 
 fig = go.Figure(data=[go.Sankey(
+    valuesuffix = currency,
     node = dict(
     pad = 15,
     thickness = 20,
@@ -51,5 +71,5 @@ fig = go.Figure(data=[go.Sankey(
     value = value
   ))])
 
-fig.update_layout(title_text="Basic Sankey Diagram", font_size=10)
+fig.update_layout(title_text="My Budget<br><i>github.com/TheEliasBe</i>", font_size=10)
 fig.show()
